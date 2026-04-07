@@ -1,0 +1,79 @@
+# templates/nomad_debug_bundle.nomad.tpl
+
+job "[[ var "job_name" . ]]" {
+  type        = "batch"
+  region      = "[[ var "region" . ]]"
+  datacenters = [[ var "datacenters" . | toStringList ]]
+
+  periodic {
+    cron             = "[[ var "cron_schedule" . ]]"
+    prohibit_overlap = [[ var "prohibit_overlap" . ]]
+    time_zone        = "UTC"
+  }
+
+  # Prevent Nomad from rescheduling failed runs automatically
+  reschedule {
+    attempts  = 0
+    unlimited = false
+  }
+
+  group "debug-bundle" {
+    count = 1
+
+    restart {
+      attempts = 2
+      interval = "10m"
+      delay    = "30s"
+      mode     = "fail"
+    }
+
+    task "run-debug" {
+      driver = "raw_exec"
+
+      # raw_exec runs directly on the host — the nomad binary and output
+      # directory must exist on whichever client node schedules this task.
+      config {
+        command = "/bin/bash"
+        args    = ["-c", <<EOT
+set -euo pipefail
+
+OUTPUT_DIR="[[ var "output_dir" . ]]"
+mkdir -p "$OUTPUT_DIR"
+
+echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Starting nomad operator debug..."
+
+[[ var "nomad_binary" . ]] operator debug \
+  -duration=[[ var "debug_duration" . ]] \
+  -interval=[[ var "debug_interval" . ]] \
+  -server-id=[[ var "server_id" . ]] \
+  -node-id=[[ var "node_id" . ]] \
+  -max-nodes=[[ var "max_nodes" . ]] \
+  -output="$OUTPUT_DIR" \
+  -address=[[ var "nomad_addr" . ]]
+
+echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Debug bundle saved to $OUTPUT_DIR"
+
+[[ if gt (var "retention_days" .) 0 -]]
+echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Cleaning up archives older than [[ var "retention_days" . ]] days..."
+find "$OUTPUT_DIR" -name "nomad-debug-*.tar.gz" -mtime +[[ var "retention_days" . ]] -delete
+echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Cleanup done."
+[[- end ]]
+
+EOT
+        ]
+      }
+
+      env {
+        NOMAD_ADDR  = "[[ var "nomad_addr" . ]]"
+        [[ if ne (var "nomad_token" .) "" -]]
+        NOMAD_TOKEN = "[[ var "nomad_token" . ]]"
+        [[- end ]]
+      }
+
+      resources {
+        cpu    = [[ var "cpu" . ]]
+        memory = [[ var "memory" . ]]
+      }
+    }
+  }
+}
