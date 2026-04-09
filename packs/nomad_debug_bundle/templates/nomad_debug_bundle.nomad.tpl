@@ -42,7 +42,7 @@ OUTPUT_DIR=[[ var "output_dir" . ]]/$TIMESTAMP
 
 mkdir -p $OUTPUT_DIR
 
-nomad operator debug \
+[[ var "nomad_binary" . ]] operator debug \
 -duration=[[ var "debug_duration" . ]] \
 -interval=[[ var "debug_interval" . ]] \
 -server-id=[[ var "server_id" . ]] \
