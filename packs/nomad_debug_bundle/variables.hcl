@@ -21,9 +21,7 @@ variable "region" {
 variable "cron_schedule" {
   description = "Cron expression for how often to collect debug bundles. Default = every 12 hours."
   type        = string
-#  default     = "0 */12 * * *"
-  default     = "*/3 * * * *"
-#  default     = "@daily"
+  default     = "0 */24 * * *"
 }
 
 variable "prohibit_overlap" {
@@ -84,8 +82,7 @@ variable "nomad_token" {
 variable "nomad_binary" {
   description = "Path to the nomad binary on the host."
   type        = string
-#  default     = "/usr/local/bin/nomad"
-  default     = "nomad"
+  default     = "/usr/bin/nomad" ## Chnage the path as per the nomad binary location
 }
 
 variable "retention_days" {
