@@ -1,40 +1,68 @@
 # mongodb
 
-<!-- Include a brief description of your pack -->
+Deploys a MongoDB instance on Nomad using the Docker driver with persistent
+host volume storage, and configurable authentication.
 
-This pack is a simple Nomad job that runs as a service and can be accessed via
-HTTP.
+## Requirements
 
-## Pack Usage
+- Nomad client with Docker driver enabled
+- If `use_host_volume = true`: a host volume named `mongodb-data` (or your
+  chosen name) must be configured on the Nomad client node
 
-<!-- Include information about how to use your pack -->
+### Configure the host volume on your Nomad client
 
-### Changing the Message
+Add this to your client's HCL config (e.g. `/etc/nomad.d/client.hcl`):
 
-To change the message this server responds with, change the "message" variable
-when running the pack.
-
+```hcl
+host_volume "mongodb-data" {
+  path      = "/opt/nomad/volumes/mongodb"
+  read_only = false
+}
 ```
-nomad-pack run mongodb --var message="Hola Mundo!"
+
+Then create the directory and restart:
+```bash
+sudo mkdir -p /opt/nomad/volumes/mongodb
+sudo chown -R nomad:nomad /opt/nomad/volumes/mongodb
+sudo systemctl restart nomad
 ```
 
-This tells Nomad Pack to tweak the `MESSAGE` environment variable that the
-service reads from.
+## Deploy examples
+
+```bash
+# Dev/local — no persistence, no auth
+nomad-pack run mongodb \
+  --registry=suyash-nomad-pack \
+  --var use_host_volume=false \
+  --var auth_enabled=false
+
+# Production — auth + persistence
+nomad-pack run mongodb \
+  --registry=suyash-nomad-pack \
+  --var root_password="supersecret" \
+  --var datacenters='["prod-dc1"]'
+
+# Specific version + custom port
+nomad-pack run mongodb \
+  --registry=suyash-nomad-pack \
+  --var mongo_image_tag="6.0" \
+  --var mongo_port=27018 \
+  --var root_password="supersecret"
+```
 
 ## Variables
 
-<!-- Include information on the variables from your pack -->
+See `variables.hcl` for the full list. Key ones:
 
-- `message` (string:"Hello World!") - The message your application will respond with
-- `count` (number:2) - The number of app instances to deploy
-- `job_name` (string) - The name to use as the job name which overrides using
-  the pack name
-- `datacenters` (list of strings:["*"]) - A list of datacenters in the region which
-  are eligible for task placement
-- `region` (string) - The region where jobs will be deployed
-- `register_service` (bool: true) - If you want to register a Nomad service
-  for the job
-- `service_tags` (list of string) - The service tags for the mongodb application
-- `service_name` (string) - The service name for the mongodb application
-
-[pack-registry]: https://github.com/hashicorp/nomad-pack-community-registry
+| Variable              | Default         | Description                              |
+|-----------------------|-----------------|------------------------------------------|
+| `mongo_image_tag`     | `7.0`           | MongoDB version                          |
+| `auth_enabled`        | `true`          | Enable --auth                            |
+| `root_username`       | `admin`         | Root user (when auth enabled)            |
+| `root_password`       | `changeme`      | ⚠ Change this in production             |
+| `use_host_volume`     | `true`          | Mount host volume for persistence        |
+| `host_volume_name`    | `mongodb-data`  | Nomad host volume name on client         |
+| `mongo_port`          | `27017`         | Static host port                         |
+| `cpu`                 | `1024`          | MHz                                      |
+| `memory`              | `1024`          | MB                                       |
+| `memory_max`          | `2048`          | MB (oversubscription ceiling)            |
