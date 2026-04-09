@@ -21,7 +21,7 @@ variable "region" {
 variable "cron_schedule" {
   description = "Cron expression for how often to collect debug bundles. Default = every 12 hours."
   type        = string
-  default     = "0 */24 * * *"
+  default     = "0 */12 * * *"
 }
 
 variable "prohibit_overlap" {
@@ -63,8 +63,7 @@ variable "max_nodes" {
 variable "output_dir" {
   description = "Absolute path on the HOST where debug archives are saved."
   type        = string
- # default     = "/opt/nomad/debug-bundles"
-  default     = "/tmp/nomad/debug-bundles"
+  default     = "/opt/nomad/debug-bundles"
 }
 
 variable "nomad_addr" {
