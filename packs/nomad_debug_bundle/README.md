@@ -1,40 +1,60 @@
 # nomad_debug_bundle
 
-<!-- Include a brief description of your pack -->
+A Nomad Pack that periodically runs `nomad operator debug` and saves the resulting
+debug bundle archive to a directory on the host machine.
 
-This pack is a simple Nomad job that runs as a service and can be accessed via
-HTTP.
+## Use case
 
-## Pack Usage
+Deploy this pack so that debug bundles are automatically collected on a schedule
+(default: every 24 hours). If an issue arises, customers can share the bundle from
+the path without needing to manually run any commands.
 
-<!-- Include information about how to use your pack -->
+## Requirements
 
-### Changing the Message
-
-To change the message this server responds with, change the "message" variable
-when running the pack.
-
-```
-nomad-pack run nomad_debug_bundle --var message="Hola Mundo!"
-```
-
-This tells Nomad Pack to tweak the `MESSAGE` environment variable that the
-service reads from.
+- The `raw_exec` driver must be enabled on Nomad clients.
+- The `nomad` binary must be present on the client host at the configured path.
+- The output directory must be writable by the Nomad client process.
+- If ACLs are enabled, provide a token with `node:read`, `agent:read`, `operator:read`,
+  `list-jobs` (all namespaces), and `agent:write` capabilities.
 
 ## Variables
 
-<!-- Include information on the variables from your pack -->
+See `variables.hcl` for the full list. Key ones:
 
-- `message` (string:"Hello World!") - The message your application will respond with
-- `count` (number:2) - The number of app instances to deploy
-- `job_name` (string) - The name to use as the job name which overrides using
-  the pack name
-- `datacenters` (list of strings:["*"]) - A list of datacenters in the region which
-  are eligible for task placement
-- `region` (string) - The region where jobs will be deployed
-- `register_service` (bool: true) - If you want to register a Nomad service
-  for the job
-- `service_tags` (list of string) - The service tags for the nomad_debug_bundle application
-- `service_name` (string) - The service name for the nomad_debug_bundle application
+| Variable         | Default                  | Description                        |
+|------------------|--------------------------|------------------------------------|
+| `cron_schedule`  | `0 */24 * * *`           | How often to run (every 12 hours)  |
+| `output_dir`     | `/opt/nomad/debug-bundles` | Host path to save archives        |
+| `debug_duration` | `2m`                     | How long each capture runs         |
+| `retention_days` | `7`                      | Days to keep old bundles           |
+| `nomad_token`    | `""`                     | ACL token (if ACLs enabled)        |
 
-[pack-registry]: https://github.com/hashicorp/nomad-pack-community-registry
+## Deploy
+
+```bash
+# Every 12 hours (default)
+nomad-pack run . --var output_dir=/opt/nomad/debug-bundles
+
+# Every 6 hours
+nomad-pack run . --var cron_schedule="0 */6 * * *" --var output_dir=/opt/nomad/debug-bundles
+
+# With ACL token
+nomad-pack run . --var nomad_token="<your-token>" --var output_dir=/opt/nomad/debug-bundles
+```
+
+## Enable raw_exec on your Nomad clients
+In your Nomad client config file (e.g. /etc/nomad.d/client.hcl), make sure this is set:
+```
+plugin "raw_exec" {
+  config {
+    enabled = true
+  }
+}
+```
+Then restart the client: ```systemctl restart nomad```
+
+## Prepare the output directory on client hosts
+```
+sudo mkdir -p /opt/nomad/debug-bundles
+sudo chown nomad:nomad /opt/nomad/debug-bundles
+```
