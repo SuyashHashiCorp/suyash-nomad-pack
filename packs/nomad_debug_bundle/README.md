@@ -23,7 +23,7 @@ See `variables.hcl` for the full list. Key ones:
 
 | Variable         | Default                  | Description                        |
 |------------------|--------------------------|------------------------------------|
-| `cron_schedule`  | `0 */24 * * *`           | How often to run (every 12 hours)  |
+| `cron_schedule`  | `0 */12 * * *`           | How often to run (every 12 hours)  |
 | `output_dir`     | `/opt/nomad/debug-bundles` | Host path to save archives        |
 | `debug_duration` | `2m`                     | How long each capture runs         |
 | `retention_days` | `7`                      | Days to keep old bundles           |
