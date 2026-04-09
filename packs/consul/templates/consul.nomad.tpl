@@ -18,13 +18,6 @@ job [[ template "job_name" . ]] {
       tags = [[ var "service_tags" . | toStringList ]]
       provider = "nomad"
       port = "http"
-#      check {
-#        name     = "alive"
-#        type     = "http"
-#        path     = "/"
-#        interval = "10s"
-#        timeout  = "2s"
-#      }
     }
     [[ end ]]
 
