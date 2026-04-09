@@ -27,7 +27,7 @@ variable "namespace" {
 variable "nomad_binary" {
   description = "Absolute path to the nomad binary on the host."
   type        = string
-  default     = "/usr/bin/nomad"   ## Chnage the path as per your envoironment.
+  default     = "/usr/local/bin/nomad"   ## Chnage the path as per your envoironment.
 }
 
 # ── Nomad connection ──────────────────────────────────────────────────────────
