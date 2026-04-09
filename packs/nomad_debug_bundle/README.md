@@ -58,3 +58,23 @@ Then restart the client: ```systemctl restart nomad```
 sudo mkdir -p /opt/nomad/debug-bundles
 sudo chown nomad:nomad /opt/nomad/debug-bundles
 ```
+
+## Render and deploy
+#### Preview the rendered jobspec first
+```
+nomad-pack render . --var output_dir=/opt/nomad/debug-bundles
+```
+
+#### Deploy (every 24 hours)
+```
+nomad-pack run . --var output_dir=/opt/nomad/debug-bundles
+```
+
+#### Deploy (every 6 hours)
+```
+nomad-pack run . \
+  --var cron_schedule="0 */6 * * *" \
+  --var output_dir=/opt/nomad/debug-bundles \
+  --var debug_duration="2m" \
+  --var retention_days=14
+```
