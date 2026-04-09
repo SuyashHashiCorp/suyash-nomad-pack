@@ -26,7 +26,7 @@ variable "count" {
 variable "message" {
   description = "The message your application will render"
   type        = string
-  default     = "Hello World!"
+  default     = "Hello Consul!"
 }
 
 variable "register_service" {
@@ -39,19 +39,4 @@ variable "service_name" {
   description = "The service name for the consul application"
   type        = string
   default     = "webapp"
-}
-
-variable "service_tags" {
-  description = "The service tags for the consul application"
-  type        = list(string)
-  # The default value is shaped to integrate with Traefik
-  # This routes at the root path "/", to route to this service from
-  # another path, change "urlprefix-/" to "urlprefix-/<PATH>" and
-  # "traefik.http.routers.http.rule=Path(∫/∫)" to
-  # "traefik.http.routers.http.rule=Path(∫/<PATH>∫)"
-  default = [
-    "urlprefix-/",
-    "traefik.enable=true",
-    "traefik.http.routers.http.rule=Path(`/`)",
-  ]
 }
