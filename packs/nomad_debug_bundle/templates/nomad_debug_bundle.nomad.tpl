@@ -6,7 +6,7 @@ job "[[ var "job_name" . ]]" {
   datacenters = [[ var "datacenters" . | toStringList ]]
 
   periodic {
-    cron             = "[[ var "cron_schedule" . ]]"
+    crons             = ["[[ var "cron_schedule" . ]]"]
     prohibit_overlap = [[ var "prohibit_overlap" . ]]
     time_zone        = "Asia/Kolkata"
   }
